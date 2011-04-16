@@ -3,17 +3,19 @@
 	import com.all.NodeList;
 	
 	/*
-	 * Keeps track of all the node lists used by the application.
+	 * Keeps track of all important node lists used by the application.
 	 */
 	public class BudgetNodeLists {
 
 		public var funds:NodeList;
+		public var selected:NodeList;
 		public var all:NodeList;
 
 		public function BudgetNodeLists():void  {
 			// constructor code
 			funds = new NodeList();
 			all = new NodeList();
+			selected = new NodeList();
 			return;
 		}
 

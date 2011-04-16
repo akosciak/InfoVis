@@ -16,16 +16,15 @@
 	import com.all.BudgetNodeLists;
 	
 	public class Main extends Sprite{
-		
-		private var _my_node:Node;
-		private var _my_nodes:BudgetNodeLists;
-		private var _my_budget_graph:BudgetGraph;
+
+		// Container for all important nodelists the application should knwo about		
+		private var _nodelists:BudgetNodeLists;
+
+		// The views being shown by the application
+		private var _budget_graph:BudgetGraph;
 
 		public function Main() {
 			trace("Main Sprite Created");
-			
-			pencil_x = 0;
-			pencil_y = 0;
 			
 			// Import Data
 			var importer:DataImporter = new DataImporter();
@@ -36,101 +35,91 @@
 			// Set the stage properties
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.align = StageAlign.TOP_LEFT;
-			stage.addEventListener(Event.ACTIVATE, activateHandler);
 			stage.addEventListener(Event.RESIZE, resizeHandler);
 			
 			// Going to just wait for load to complete...
 			return;
 		}
+
+		/*
+     * What do to once, the graphml data has been loaded.
+     * Basically an extension of the Main Constructor.
+     */
+		private function loadCompleteHandler(event:LoadCompleteEvent):void {
+			_nodelists = event.lists;
+			buildScene();
+			return;
+		}
 		
 		// Repositions my single node
 		public function repositionObjects():void {
-			_my_budget_graph.x = 0;
-			_my_budget_graph.y = stage.stageHeight/2;
+			_budget_graph.x = 0;
+			_budget_graph.y = stage.stageHeight/2;
 		}
 
+		/*
+     * Builds and draws each view of the application
+     */ 
 		private function buildScene():void {
 
 			// Add the Bar Graph
-			_bar_graph = new BarGRaph(_selected_nodes);
 
 			// Add the Line Graph			
 
 			// Add the Function Graph
 
 			// Add the Budget Graph
-			_my_budget_graph = new BudgetGraph(_my_nodes);
-			_my_budget_graph.x = 0;
-			_my_budget_graph.y = stage.stageHeight/2;
-			this.addChild(_my_budget_graph);
-			_my_budget_graph.drawBudgetGraph();
+			_budget_graph = new BudgetGraph(_nodelists);
+			_budget_graph.width = stage.stageWidth;
+			_budget_graph.height = stage.stageHeight;
+			_budget_graph.x = 0;
+			_budget_graph.y = stage.stageHeight/2;
+			this.addChild(_budget_graph);
+			_budget_graph.drawBudgetGraph();
 
-			// Listen for Node Selection so you can make the necessary changes
-			addEventListener(MouseEvent.MOUSE_DOWN,manageMouseDown,false,0,true);
+			// Listen for selections
+			_budget_graph.addEventListener(MouseEvent.MOUSE_DOWN,budgetGraphClick,false,0,true);
+
 			return;
 		}
-
-		private var fundnodes:Vector.<Node>;
-
-		private function loadCompleteHandler(event:LoadCompleteEvent):void {
-			_my_nodes = event.lists;
-			buildScene();
-			return;
-		}
-
-		private var pencil_x:Number;
-		private var pencil_y:Number;
-		private var i:int = 0;
-
-		public function compareFunction(x:Node,y:Node):Number {
-			return y.cost - x.cost;
-		}
-
-		private function sortToMiddle(nodes:Vector.<Node>):Vector.<Node> {
-			
-			var new_nodes:Vector.<Node> = new Vector.<Node>();
-			var node:Node;
-			var push:Boolean = true;
-			
-			// First sort by cost
-			nodes.sort(compareFunction);
-			// Now build a new vector with the highest cost in the middle
-			node = nodes.shift();
-			
-			// Alternate between front and back of vector
-			while(node != null){
-				trace(node.cost);
-				if (push){
-					new_nodes.push(node);
-					push = false;
-				} else {
-					new_nodes.unshift(node);
-					push = true;
-				}
-				node = nodes.shift();
-			}
-
-			return new_nodes;
-		}
-
 		
-		private function activateHandler(event:Event):void {
-			trace("activateHandle: " + event);
-		}
-		
+		/*
+     * Called when the application is resized
+     */		
 		private function resizeHandler(event:Event):void {
 			trace("resizeHandler: "+event);
 			trace("stageWidth: "+stage.stageWidth+" stageHeight: "+stage.stageHeight);
 			repositionObjects();
 		}
 
-		private function manageMouseDown(event:MouseEvent):void{
-  		trace("Main::MOUSE_DOWN");
+		/*
+     * Updates the views if a selection was made in the budget graph view
+     */ 
+		public function budgetGraphClick(event.MouseEvent){
+			trace("Main::budgetGraphClick() - update the necessary views");
 			
 			// If the control key is pressed and the target is a Node		
 		  if(e.ctrlKey && event.Target is Node) {
-	      trace("Main::manageMouseDown() - Node was selected!");
-		  }
+	      trace("Main::budgetGraphClick() - Node was selected!");
+				//TODO: Figure out if the node is already contained in the selected list.
+				//TODO: Make sure the graph highlights the node that was selected.
+				_nodelists.selected.push(Node(event.Target);
+		  }						
+
+			return;
+		}
+
+		/*
+     * Updates the view if a selection was made in the function graph view
+     */
+		public function functionGraphClick(event.MouseEvent){
+			trace("Main::functionGraphClick() - update the necessary views");
+
+			// If the control key is pressed and the target is a Node		
+		  if(e.ctrlKey && event.Target is Node) {
+	      trace("Main::functionGraphClick() - Node was selected!");
+				_nodelists.selected.push(Node(event.Target);
+		  }		
 
 			return;
 		}

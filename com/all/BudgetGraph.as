@@ -54,7 +54,7 @@
 
 		private function manageMouseDown(event:MouseEvent):void{
   		trace("BudgetGraph::MOUSE_DOWN");
-		
+
 			timer = new Timer();
 
 			// Set timer properties
