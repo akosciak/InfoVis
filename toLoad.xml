@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml>
+	
+	<key id="cost" for="node" attr.name="cost" attr.type="double"/>
+	
+	<key id="title" for="node" attr.name="title" attr.type="string"/>
+	
+	<key id="costtype" for="node" attr.name="costtype" attr.type="string"/>
+	
+	<key id="type" for="node" attr.name="type" attr.type="int"/>
+	
+	<graph id="G" edgedefault="undirected">	
+		
+		<node id="1">
+			
+			<data key="cost">10</data>
+
+			<data key="title">adrian</data>
+
+			<data key="costtype">Y</data>
+			<data key="type">1</data>
+
+		</node>
+
+		<edge source="1" target="2">
+
+		</edge>
+		<node id="2">
+			
+			<data key="cost">20</data>
+
+			<data key="title">sandra</data>
+
+			<data key="costtype">Y</data>
+			<data key="type">2</data>
+
+		</node>
+
+
+	</graph>
+</graphml>
