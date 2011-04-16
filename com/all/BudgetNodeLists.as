@@ -7,7 +7,7 @@
 	 */
 	public class BudgetNodeLists {
 
-		public var funds:NodeList;
+		public var funds:DisplayNodeList;
 		public var selected:NodeList;
 		public var all:NodeList;
 

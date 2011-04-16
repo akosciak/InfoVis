@@ -5,64 +5,65 @@
 	
 	public class BudgetGraph extends Sprite{
 
-		private var _lists:BudgetNodeLists;
+		private static const FISH_EYE_TIMER:int = 100;
+		private static const SIZE_MULTIPLIER:Number = 250000;
 
-		public function BudgetGraph(lists:BudgetNodeLists):void  {
+		private var _timer:Timer;
+		private var _root_nodes:DisplayNodeList;
+
+		public function BudgetGraph(nodes:DisplayNodeList):void  {
 			// constructor code
 			trace("BudgetGraph::BudgetGraph() - Constructing the Budget Graph");
 			
-			// Set some preliminary properties for drawing nodes
-			Node.max_cost = lists.all.max_cost;
-			Node.multiplier = 25000;
+			// The Root Node List drawn first (should be the Funds)
+			_root_nodes = nodes;
+
+			// Setup the fish eye timer
+			_timer = new Timer();
+			_timer.delay = FISH_EYE_TIMER;
+			_timer.repeatCount = 0;
+			_timer.addEventListener(TimerEvent.TIMER,updateFishEye);
+
+			// Set the Node properties that will determine the size of the drawing
+			Node.max_cost = _root_nodes.max_cost;
+			Node.multiplier = SIZE_MULTIPLIER;
 			
-			_lists = lists;
 			return;
 		}
 
+		/*
+     * Draw the budget graph.
+     */ 
 		public function drawBudgetGraph():void {
 			
-			var nodes:NodeList = _lists.funds;
-			var revenue_btn:BudgetButton;
-			var spending_btn:BudgetButton;
-
-			//revenue_btn = new BudgetButton(100,15,2,1,0xFFFFFF,"REVENUE",0x000000);
-			//spending_btn = new BudgetButton(100,15,2,1,0xFFFFFF,"SPENDING",0x000000);
-			
 			trace("BudgetGraph::drawBudgetGraph() - drawing the budget graph");
-			//revenue_btn.x = 5;		
-			//revenue_btn.y = -stage.stageHeight-50;
-			//spending_btn.y = stage.stageHeight+50;
-			//spending_btn.x = 5;
-			//addChild(revenue_btn);
-			//addChild(spending_btn);
 
-			nodes.setSearch(true,true);
-			nodes.sort();
-			nodes.x = 15;
-			nodes.y = 0;
-			this.addChild(nodes);
-			nodes.drawNodes(NodeList.DRAW_RIGHT,NodeList.LEFT);
+			_root_nodes.setSearch(true,true);
+			_root_nodes.sort(HIGH);
+			_root_nodes.x = 15;
+			_root_nodes.y = 0;
+			this.addChild(_root_nodes);
+			_root_nodes.drawNodes(DisplayNodeList.DRAW_RIGHT,DisplayNodeList.LEFT);
 			
+			// Set the listeners for the fish-eye timer
 			addEventListener(MouseEvent.MOUSE_DOWN,manageMouseDown,false,0,true);
 			addEventListener(MouseEvent.MOUSE_UP,manageMouseUp,false,0,true);
 
 			return;
 		}
 
-		private static const FISH_EYE_TIMER:int = 100;
-		private var _timer:Timer
-
+		/*
+     * Click and Hold Event Handling to redraw with a fish eye.
+     */
 		private function manageMouseDown(event:MouseEvent):void{
   		trace("BudgetGraph::MOUSE_DOWN");
-
-			timer = new Timer();
-
-			// Set timer properties
-			_timer.delay = FISH_EYE_TIMER;
-			_timer.repeatCount = 0;
-			_timer.addEventListener(TimerEvent.TIMER,updateFishEye);
 			_timer.start;
+			return;
+		}
 
+		private function manageMouseUp(event:MouseEvent):void{
+  		trace("BudgetGraph::MOUSE_UP");
+			_timer.stop;
 			return;
 		}
 
@@ -72,12 +73,6 @@
 		private function updateFishEye(event:TimerEvent):void {
 			trace("BudgetGraph::updateFishEye() - BANG!");
 			return;			
-		}
-
-		private function manageMouseUp(event:MouseEvent):void{
-  		trace("BudgetGraph::MOUSE_UP");
-			_timer.stop;
-			return;
 		}
 
 	}

@@ -54,7 +54,7 @@
 		// Repositions my single node
 		public function repositionObjects():void {
 			_budget_graph.x = 0;
-			_budget_graph.y = stage.stageHeight/2;
+			_budget_graph.y = 0;
 		}
 
 		/*
@@ -69,11 +69,11 @@
 			// Add the Function Graph
 
 			// Add the Budget Graph
-			_budget_graph = new BudgetGraph(_nodelists);
+			_budget_graph = new BudgetGraph(_nodelists.funds);
 			_budget_graph.width = stage.stageWidth;
 			_budget_graph.height = stage.stageHeight;
 			_budget_graph.x = 0;
-			_budget_graph.y = stage.stageHeight/2;
+			_budget_graph.y = 0;
 			this.addChild(_budget_graph);
 			_budget_graph.drawBudgetGraph();
 

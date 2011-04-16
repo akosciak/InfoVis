@@ -65,31 +65,46 @@ package com.all {
 			return;
 		}
 
+    /*
+     * Drawing to show that there is no room to draw a new node.
+     */ 
+		private function drawNoRoom(x:int,y:int){
 
-		// Check if there is room to draw this
+			// My current solution to the problem...
+			var txt:TextField = new TextField();
+			txt.text = "...";
+
+			// Makes it easier to see how it fits into the view
+			txt.background = true
+			txt.backgroundColor = 0xFFFFFF;
+			txt.border = true;
+			txt.borderColor = 0x000000;
+
+			trace("DisplayNodeList::drawNoRoom() - pre autosize: "+txt.height+","+txt.width");
+			txt.autoSize = TextFieldAutoSize.CENTER;
+			trace("DisplayNodeList::drawNoRoom() - post autosize: "+txt.height+","+txt.width");
+			txt.x = x;
+			txt.y = y;
+			this.addChild(txt);
+
+			return;
+		}
+
+		/*
+     * Checks if the point is out of bounds.
+     */
 		private function fitsInView(local:Point):Boolean{
 
-			var globalPencil:Point;
-			var fit:Boolean = true;
+			var fits:Boolean = true;
 
-			trace("NodeList("+_id+")::drawRow() - drawing at local: "
-					+ local.x + "," + local.y);
-			globalPencil = localToGlobal(local);
-			trace("NodeList("+_id+")::drawRow() - drawing at global: "
-					+ globalPencil.x + "," + globalPencil.y);
-
-			if (globalPencil.y > (stage.stageHeight - 2*radius) 
-					|| globalPencil.y < -(stage.stageHeight + 2*radius)){
-				var txt:TextField = new TextField();
-				txt.appendText("...");
-				txt.autoSize = TextFieldAutoSize.CENTER;
-				txt.x = local.x;
-				txt.y = local.y;
-				this.addChild(txt);
-				fit = false;
+			if ( (local.y > this.height) || 
+					 (local.x > this.width ) || 
+					 (local.y < 0          ) || 
+					 (local.x < 0          ) 		){
+				fits = false;
 			}	
 
-			return fit;
+			return fits;
 		}
 
 		/*
@@ -105,7 +120,6 @@ package com.all {
 			var pencil_x:Number = 0;
 			var pencil_y:Number = 0;
 
-
 			trace("NodeList("+_id+")::drawRow() - Start drawing all "+length+" nodes");
 
 			// If this is the first draw
@@ -113,9 +127,8 @@ package com.all {
 				_isDrawn = true;
 			}
 
-			radius = _nodes[0].getCostRadius();
-
 			// Determine start location
+			radius = _nodes[0].getCostRadius();
 			switch(start){
 				case TOP: pencil_y += radius; break;
 				case BOTTOM: pencil_y -= radius; break;
@@ -125,21 +138,13 @@ package com.all {
 					trace("NodeList("+_id+")::drawNodes()-Error:incorrect start given");
 			}
 
-			for (i = 0; i < length; i++){
+			// Draw each node
+			for (i=0; i < length; i++){
 				
-				ii = i + 1;
 				node = _nodes[i];
-				if (ii < length){
-					next_radius = _nodes[ii].getCostRadius();
-				} else {
-					next_radius = -1;
-				}
-				
 				radius = node.getCostRadius();
-				if(!fitsOnScreen(new Point(pencil_x,pencil_y),radius)){
-					break;
-				}
 
+				// Draw the node
 				node.addEventListener(MouseEvent.ROLL_OVER,manageMouseOver,false,0,true);
 				node.doubleClickEnabled = true;
 				node.x = pencil_x;
@@ -148,9 +153,16 @@ package com.all {
 				node.drawNode();
 				this.addChild(node);
 
-				if (next_radius >= 0){
+				// If there is another node that can be drawn, than set the new drawing position
+				if (i+1 < length){
+
+					var fits:Boolean;
+					next_radius = _nodes[ii].getCostRadius();
+
 					switch(direction){
-						case DRAW_DOWN: pencil_y += radius + next_radius; break;
+						case DRAW_DOWN: 
+							pencil_y += radius + next_radius;
+							fits = fitsInView(new Point(pencil_x+2*radius,pencil_y));
 						case DRAW_UP: pencil_y -= radius + next_radius; break;
 						case DRAW_RIGHT: pencil_x += radius + next_radius; break;
 						default: 
