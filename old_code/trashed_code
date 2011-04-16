@@ -1,0 +1,100 @@
+		/*
+		private function drawNodes(nodes:Vector.<Node>,isVertical:Boolean,x:Number,y:Number){
+			
+			// Make sure there are any nodes
+			if (nodes.length > 0){
+				
+				var j:int;
+				var node:Node;
+				var area:Number;
+				var local_x:Number = pencil_x;
+				var local_y:Number = pencil_y;
+				var highest_radius:Number = 0;
+				var sorted_nodes:Vector.<Node>;
+				var width:Number = 0;
+				
+				// Build some preliminary statistics 
+				for (j = 0; j < nodes.length; j++){
+					
+					node = nodes[j];
+					highest_radius = Math.max(node.getCostRadius(),highest_radius);
+					width = node.getCostRadius()*2 + width;
+				}
+				
+				if (isVertical){
+					local_y -= highest_radius;
+				} else {
+					local_y += highest_radius;
+				}
+				
+				local_x -= width/2;
+
+				for (j = 0; j < nodes.length; j++){
+					
+					trace("\tdrawing: "+node.title);
+					node = nodes[j];
+					
+					local_x += node.getCostRadius();
+					
+					node.x = local_x;
+					node.y = local_y;
+					
+					graphics.lineStyle(2,0x335566);
+					graphics.moveTo(x,y);
+					graphics.lineTo(node.x,node.y);
+					
+					addChild(node);
+					trace(node.getCostRadius());
+					node.drawNode();
+					
+					local_x += node.getCostRadius();
+				}
+			}			
+			
+			return;
+		}
+
+		private function onTimer(evt:MouseEvent):void {
+
+			var x:int;
+			var area:Number;
+			var fund:Node = fundnodes[i];
+			var txtFld:TextField = new TextField();
+			
+			// Remove the children / clear the screen
+			graphics.clear();
+			for(x = 0; x < this.numChildren; x++){
+				var me:DisplayObject = this.getChildAt(x);
+				me.visible = false;
+			}
+			
+			// Check if we've looped around the funnodes
+			i++;
+			if (i == fundnodes.length)
+				i = 0;
+
+			trace("drawing: "+fund.title);
+			trace(fundnodes.length);
+			trace(i);
+			
+			txtFld.appendText(fund.title+"\n"+fund.cost);
+			addChild(txtFld);
+			
+			pencil_x = stage.stageWidth/2;
+			pencil_y = stage.stageHeight/2;
+			fund.x = pencil_x;
+			fund.y = pencil_y;
+			
+			pencil_y += fund.getCostRadius();
+			fund.spending = sortToMiddle(fund.spending);
+			drawNodes(fund.spending,false,fund.x,fund.y);
+			pencil_y -= 2*(fund.getCostRadius());
+			fund.revenue = sortToMiddle(fund.revenue);
+			drawNodes(fund.revenue,true,fund.x,fund.y);
+			
+			addChild(fund);
+			fund.drawNode();
+			
+			return;
+		}
+		*/

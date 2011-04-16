@@ -76,7 +76,9 @@
 
 		private function manageMouseUp(event:MouseEvent):void{
   		trace("BudgetGraph::MOUSE_UP");
-			_timer.stop;
+		
+			// While the mouse is down if you move then move the screen in a fish-eye way
+
 			return;
 		}
 
