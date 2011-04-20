@@ -2,30 +2,24 @@
 	
 	import com.all.Node;
 	import flash.display.Sprite;
-	import flash.events.MouseEvent;
-	import flash.events.EventPhase;
-	import flash.text.TextField;
-	import flash.geom.Point;
-	import flash.text.TextFieldAutoSize;
 
 	public class NodeList extends Sprite{
 	
 		// Types of sorts
-		private static var HIGH:int = 0;
-		private static var LOW:int = 1;
-		private static var MIDDILE:int = 3;
+		public static const HIGH:int = 0;
+		public static const LOW:int = 1;
+		public static const MIDDLE:int = 3;
 
 		// An ID to give to NodeLists
 		private static var NodeListID:int = 0;
 
 		//The Nodes and different stats about them
-		private var _nodes:Vector.<Node>;
+		protected var _nodes:Vector.<Node>;
 		public var length:uint;
 		public var max_cost:Number;
-		public var max_radius:Number;
 
 		// The NodeLists unique ID
-		private var _id:int;
+		protected var _id:int;
 
 		public function NodeList():void  {
 
@@ -51,9 +45,28 @@
 			
 			if (node.cost > max_cost){
 				max_cost = node.cost;
-				max_radius = node.getCostRadius();
 			}
 			
+			return;
+		}
+
+		protected function shiftTo(node:Node):void{
+
+			var i:int;
+			var local:Node;
+
+			trace("NodeList::shiftTo - Shifting ...");
+			for (i=0;i<_nodes.length;i++){
+				if (_nodes[0].isEqualTo(node)){
+					trace("NodeList::shiftTo - ",_nodes[0].id,node.id," Found It!");				
+					break;
+				} else {
+					trace("NodeList::shiftTo - ",_nodes[0].id,node.id," shift");		
+					local = _nodes.shift();
+					_nodes.push(local);
+				}
+			}
+
 			return;
 		}
 
@@ -62,14 +75,14 @@
      * then spreading out on either side.
      * ie. [3]->[5]->[7]<-[6]<-[4]
      */
-		private function sortToMiddle() {
+		private function sortToMiddle():void {
 			
 			var new_nodes:Vector.<Node> = new Vector.<Node>();
 			var node:Node;
 			var push:Boolean = true;
 			
 			// First sort by cost
-			_nodes.sort(compareFunction);
+			_nodes.sort(compareHigh);
 			// Now build a new vector with the highest cost in the middle
 			node = _nodes.shift();
 			
@@ -82,7 +95,7 @@
 					new_nodes.unshift(node);
 					push = true;
 				}
-				node = nodes.shift();
+				node = _nodes.shift();
 			}
 
 			_nodes = new_nodes;
@@ -95,13 +108,13 @@
 		 */
 		public function sort(type:int = HIGH):void {
 
-			switch(type):
+			switch(type){
 				case HIGH:
-					_nodes.sort(compareHigh);
+					_nodes.sort(compareHigh); break;
 				case LOW:
-					_nodes.sort(compareLow);
+					_nodes.sort(compareLow); break;
 				case MIDDLE:
-					sortToMiddle();
+					sortToMiddle(); break;
 				default:
 					trace("NodeList::sort() - Error: incorrect input");
 			}
@@ -123,6 +136,13 @@
 		public function printTitles():void {
 			for (var i:int = 0; i < _nodes.length; i++){
 				trace("Title: "+_nodes[i].title);
+			}
+			return;
+		}
+
+		public function printDetails():void {
+			for (var i:int = 0; i < _nodes.length; i++){
+				trace("Title:",_nodes[i].title," ID:",_nodes[i].id);
 			}
 			return;
 		}

@@ -99,6 +99,71 @@
 		}
 		*/
 
+		/*
+     * Click and Hold Event Handling to redraw with a fish eye.
+     */
+		private function manageMouseDown(event:MouseEvent):void{
+  		trace("BudgetGraph::MOUSE_DOWN");
+			_timer.start();
+			_y = stage.mouseY;
+			return;
+		}
+
+		private function manageMouseUp(event:MouseEvent):void{
+  		trace("BudgetGraph::MOUSE_UP");
+			_timer.stop();
+			return;
+		}
+
+		/*
+     * Zoom in or out, depending on the direction of movement.
+     */
+		private function updateFishEye(event:TimerEvent):void {
+			trace("BudgetGraph::updateFishEye() - BANG!");
+
+			var change:Number;
+			var scale:Number;
+			var rootNode:Node;
+			var global:Point;
+			var origin:Point = new Point();
+
+			if (mouseY != _y){
+
+				// Get the root node coordinates
+				rootNode = _root_nodes.getNodeAt(0);
+				origin.y = rootNode.y;
+				origin.x = rootNode.x;
+
+				global = localToGlobal(origin);
+				if (global.y > 0){
+					trace("I'm over!",global.y,_root_nodes.getNodeAt(0).y);
+					change = stage.mouseY - _y;					
+				} else {
+					trace("I'm under!",global.y,_root_nodes.getNodeAt(0).y);
+					change = _y - stage.mouseY;
+				}
+
+				// First scale
+				trace(change,stage.mouseY,_y);
+				trace(this.height,this.width);
+
+				scale = this.height/(this.height + change);
+				this.height += change;
+				this.width += change;
+				trace(this.height,this.width);
+
+				// Then move to follow the mouse
+				trace(this.x,this.y);
+				this.y = this.y + (stage.mouseY-_y*scale);
+				this.x = this.x + (origin.x - origin.x*scale);
+				trace(this.x,this.y);
+
+				_y = stage.mouseY;
+			}
+		
+			setBoxAtMouse();
+			return;			
+
 // Used to be found in BudgetGraph::drawBudgetGraph
 			//var revenue_btn:BudgetButton;
 			//var spending_btn:BudgetButton;
