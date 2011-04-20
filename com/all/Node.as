@@ -6,28 +6,6 @@
 	
 	public class Node extends Sprite{
 
-		// Node Type Constants
-		public static const REVENUE_SOURCE:int = 0;
-		public static const REVENUE_SUBSECTION:int = 1;
-		public static const REVENUE_SECTION:int = 2;
-		public static const FUND:int = 3;
-		public static const DEPARTMENT:int = 4;
-		public static const DEPARTMENT_SUBSECTION:int = 5;
-		public static const TOTAL_APPROPRIATIONS:int = 6;
-		public static const TOTAL_POSITIONS:int = 7;
-		public static const POSITION_SECTION:int = 8;
-		public static const POSITION_SUBSECTION:int = 9;
-		public static const POSITION:int = 10;
-		public static const APPROPRIATION_SECTION:int = 11;
-		public static const APPROPRIATION:int = 12;
-		public static const UNKNOWN:int = -1;
-
-		public static const TITLE:String = "title"; 
-		public static const ID:String = "id"; 
-		public static const COST:String = "cost"; 
-		public static const COSTTYPE:String = "costtype"; 
-		public static const TYPE:String = "type"; 
-
 		// Global Node Properties
 		public static var max_cost:Number = 0;
 		public static var multiplier:Number = 100;
@@ -40,62 +18,109 @@
 		public var type:int;
 		
 		private var _radius:Number;
-		public var isDrawn:Boolean;
-		
+		private var _alpha:Number;
+		private var _highlightAlpha:Number;
+		private var _color:Number;
+		private var _highlightColor:Number;
+		private var _highlightThickness:Number;
+		private var _isDrawn:Boolean;		
+
+		// Nodes that it is linked to in the budget
 		public var revenue:NodeList = null;
 		public var spending:NodeList = null;
-		public var container:NodeList = null;
-		private var box:HoverBox = null;
 
 		/*
 		 * Constructor
 		 */ 
 		public function Node(title:String="",id:String="",cost:Number=0,
-							 costtype:String="",type:int=UNKNOWN):void{
+							 costtype:String="",type:int=NodeType.UNKNOWN):void{
+
+			// Set the data properties
 			this.title = title;
 			this.id = id;
 			this.cost = cost;
 			this.costtype = costtype;
 			this.type = type;
 			
+			// Set the display properties
 			_radius = 0;
+			_alpha = 1.0;
+			_color = 0x000000;
+			_highlightAlpha = 1.0;
+			_highlightColor = 0xFF0000;
+			_highlightThickness = 5;
 			
+			// Connections to other nodes
 			revenue = new NodeList();
 			spending = new NodeList();
-			
-			this.mouseChildren = false;
-			addEventListener(MouseEvent.ROLL_OVER, manageMouseOver, false, 0, true);
-			addEventListener(MouseEvent.ROLL_OUT, manageMouseOut, false, 0, true);
-			addEventListener(MouseEvent.MOUSE_MOVE, manageMouseMove, false, 0, true);
-			addEventListener(MouseEvent.MOUSE_DOWN,manageMouseClick,false,0,true);
-			addEventListener(MouseEvent.DOUBLE_CLICK,manageMouseDoubleClick,false,0,true);
 			
 			return;
 		}
 
-		public function drawNode():void {
+		/*
+     * Returns a copy of the this node, with the same properties.
+     */
+		public function copy():Node {
+			var node:Node = new Node(title,id,cost,costtype,type);
+			return node;
+		}
+
+		/*
+     * Determines if the ID's are equal.
+     */
+		public function isEqualTo(node:Node):Boolean {
+
+			var isEqual:Boolean = false;
+
+			if (this.id == node.id){
+				isEqual = true;
+			}
+
+			return isEqual;
+		}
+
+		/*
+     * Surrounds a currently drawn Node with a highlight!
+     */		
+		public function highlight():void {
+			if (!isDrawn){
+				trace("Node::highlight() - node must be drawn before highlighting");
+			} else {
+				graphics.lineStyle(	_highlightThickness,
+														_highlightColor,
+														_highlightAlpha);
+				graphics.beginFill(_color,_alpha);
+				graphics.drawCircle(0,0,_radius);
+				graphics.endFill();		
+			}
+			return;
+		}
+
+		/*
+     * Draws the node (circle).
+     */
+		public function draw():void {
 
 			// If the radius isn't set already 
 			if (!_radius){
 				setCostRadius();
 			}
-			
-			if (!isDrawn){
-				
-				trace("Node::drawNode() - drawing the node");
+	
+			if (!_isDrawn){
+				_isDrawn = true;
+				trace("Node::draw() - drawing the node");
 				graphics.lineStyle();
-				graphics.beginFill(0xFF0000,0.5);
+				graphics.beginFill(_color,_alpha);
 				graphics.drawCircle(0,0,_radius);
 				graphics.endFill();		
-				isDrawn = true;
-			} else {
-				trace("Node::drawNode() - already drawn making it visible");
-				this.visible = true;
 			}
 
 			return;
 		}
 
+		/*
+     * Add nodes that are connected.
+     */
 		public function addRevenue(node:Node):void {
 			revenue.push(node);
 			return;
@@ -136,57 +161,5 @@
 			
 			return _radius;
 		}
- 
- 		/*
-		 * Show the details of the node when the user hovers over it.
-		 */
-		private function manageMouseOver(event:MouseEvent):void{
-
-			if (!box){
-				box = new HoverBox(this);
-			} 
-
-			box.draw();
-			addChild(box);
-	
-			return;
-		}
- 
-		private function manageMouseOut(event:MouseEvent):void{
-  		//your out code here
-			removeChild(box);
-			box = null;
-
-			return
-		}
-
-		private function manageMouseMove(event:MouseEvent):void{
-
-			var target:* = event.target;
-
-			if (box){
-				box.x = target.mouseX;
-				box.y = target.mouseY;
-			}
-		}
-
-		/*
-     * If there is a mouse click on a node display both it's spending 
-     * and its revenue, if they arent being displayed already.
-     */
-		private function manageMouseClick(event:MouseEvent):void{
-  		trace("Node::MOUSE_CLICK");
-			var node:Node = Node(event.target);
-			container.setupSimpleDisplay(node);
-			return;
-		}
-
-		private function manageMouseDoubleClick(event:MouseEvent):void{
-  		trace("Node::DOUBLE_CLICK");
-			var node:Node = Node(event.target);
-			container.setupDetailDisplay(node);
-			return;
-		}
-		
 	}
 }

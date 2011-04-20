@@ -91,8 +91,13 @@
 			
 			for each (var node:Object in dataset.nodes.data) {
 				var new_node:Node;
-				new_node = new Node(node[Node.TITLE],node[Node.ID],node[Node.COST],
-									node[Node.COSTTYPE],node[Node.TYPE]);
+				if (node[NodeProperty.TYPE] != NodeType.POSITION){
+					new_node = new Node(node[NodeProperty.TITLE],
+															node[NodeProperty.ID],
+															node[NodeProperty.COST],
+															node[NodeProperty.COSTTYPE],
+															node[NodeProperty.TYPE]);
+				}
 				lists.add(new_node);
 				map[new_node.id] = new_node;
 			}
