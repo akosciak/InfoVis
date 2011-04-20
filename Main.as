@@ -126,3 +126,4 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 			graphics.endFill();
 
 			return;		}	}	}
+>>>>>>> 5a12b554a67f0ec971ec007168709712e71e0d3c
