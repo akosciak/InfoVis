@@ -7,10 +7,6 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 
 	import flash.text.TextField;
 	import com.all.Node;	import com.all.DataImporter;	import com.all.LoadCompleteEvent;	import com.all.NodeList;	import com.all.BudgetNodeLists;
-	import com.all.BudgetGraph;
-	import com.all.PlaceHolder;
-	import com.all.FunctionGraph;
-	import com.all.DisplayNodeList;
 	import com.all.Year;
 	import com.all.BudgetButton;
 	import com.all.YearVis;
@@ -31,10 +27,6 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 
 			var temp_nodelists:BudgetNodeLists;
 			
-			// Set Important Global Node Values
-			Node.max_cost = temp_nodelists.all.max_cost;
-			trace("Set max node cost to: ",Node.max_cost);
-
 			// Load 4 years of data			_years[Year.Y_2011] = new YearVis(event.lists);
 			trace("Main::loadCompleteHandler() - 2011 Loaded");
 
