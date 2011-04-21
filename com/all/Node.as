@@ -83,7 +83,7 @@
      * Surrounds a currently drawn Node with a highlight!
      */		
 		public function highlight():void {
-			if (!isDrawn){
+			if (!_isDrawn){
 				trace("Node::highlight() - node must be drawn before highlighting");
 			} else {
 				graphics.lineStyle(	_highlightThickness,

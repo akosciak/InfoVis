@@ -1,2 +1,2 @@
 Loading configuration file /home/adrian/.flex/frameworks/flex-config.xml
-/home/adrian/actionscript/infovis/Main.swf (17118 bytes)
+/home/adrian/actionscript/infovis/Main.swf (12866 bytes)
