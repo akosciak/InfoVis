@@ -4,11 +4,11 @@
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
 	
-	public class Node extends Sprite{
+	public class Node extends Sprite {
 
 		// Global Node Properties
 		public static var max_cost:Number = 0;
-		public static var multiplier:Number = 100;
+		public static var multiplier:Number = 1000;
 
 		// Node Properties
 		public var title:String;
@@ -23,7 +23,10 @@
 		private var _color:Number;
 		private var _highlightColor:Number;
 		private var _highlightThickness:Number;
+
+		// Some state variables
 		private var _isDrawn:Boolean;		
+		public var isHighlighted:Boolean;
 
 		// Nodes that it is linked to in the budget
 		public var revenue:NodeList = null;
@@ -50,6 +53,10 @@
 			_highlightColor = 0xFF0000;
 			_highlightThickness = 5;
 			
+			// More properties
+			_isDrawn = false;
+			isHighlighted = false;
+
 			// Connections to other nodes
 			revenue = new NodeList();
 			spending = new NodeList();
@@ -79,6 +86,21 @@
 			return isEqual;
 		}
 
+		public function clear():void {
+			graphics.clear();
+			return;
+		}
+
+		public function unhighlight():void {
+			if (!_isDrawn){
+				trace("Node::highlight() - node must be drawn before unhighlighting");
+			} else {
+				isHighlighted = false;
+				_draw();
+			}
+			return;
+		}
+
 		/*
      * Surrounds a currently drawn Node with a highlight!
      */		
@@ -86,13 +108,30 @@
 			if (!_isDrawn){
 				trace("Node::highlight() - node must be drawn before highlighting");
 			} else {
+				isHighlighted = true;
+				_draw();
+			}
+			return;
+		}
+
+		private function _draw():void {
+
+			graphics.clear();
+
+			// Set the highlight
+			if (isHighlighted){
 				graphics.lineStyle(	_highlightThickness,
 														_highlightColor,
-														_highlightAlpha);
-				graphics.beginFill(_color,_alpha);
-				graphics.drawCircle(0,0,_radius);
-				graphics.endFill();		
+														_highlightAlpha);		
+			} else {
+				graphics.lineStyle();
 			}
+
+			// Draw the node circle
+			graphics.beginFill(_color,_alpha);
+			graphics.drawCircle(0,0,_radius);
+			graphics.endFill();		
+
 			return;
 		}
 
@@ -108,11 +147,10 @@
 	
 			if (!_isDrawn){
 				_isDrawn = true;
-				trace("Node::draw() - drawing the node");
-				graphics.lineStyle();
-				graphics.beginFill(_color,_alpha);
-				graphics.drawCircle(0,0,_radius);
-				graphics.endFill();		
+				_draw();
+			} else {
+				graphics.clear();
+				_draw();
 			}
 
 			return;
@@ -141,7 +179,7 @@
 			
 			// Make sure that the max cost is set
 			if (!Node.max_cost){
-				trace("Node::getCostRadius - ERROR:Maximum cost has not been set");
+				trace("Node::getCostRadius - ERROR: Maximum cost has not been set");
 			} else {
 				area = (Math.abs(this.cost)/Node.max_cost)*Node.multiplier;
 				_radius = Math.sqrt(area/Math.PI);
