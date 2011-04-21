@@ -38,7 +38,7 @@
 			
 			for (i=0;i<archetype.all.length;i++){
 				node = archetype.all.getNodeAt(i).copy();
-				node.cost = node.cost*(.20*(Math.random()-0.5));
+				node.cost = node.cost + node.cost*(.20*(Math.random()-0.5));
 				_new_nodelists.add(node);
 			}
 
@@ -71,4 +71,3 @@
 	}
 	
 }
->>>>>>> 5a12b554a67f0ec971ec007168709712e71e0d3c

@@ -50,6 +50,17 @@
 			return;
 		}
 
+		public function remove(node:Node):void {
+			var index:int = _nodes.indexOf(node);
+			if (index >= 0){
+				_nodes.splice(index,1);
+ 			} else {
+				trace("NodeList::remove() - Error - unable to find ",node.title);
+			}
+				
+			return;
+		}
+
 		protected function shiftTo(node:Node):void{
 
 			var i:int;
@@ -134,6 +145,7 @@
 		 * Traces the titles of all nodes in the list, for debugging.
 		 */
 		public function printTitles():void {
+			trace("NodeList::printTitles() - printing Titles of all nodes");
 			for (var i:int = 0; i < _nodes.length; i++){
 				trace("Title: "+_nodes[i].title);
 			}

@@ -13,10 +13,15 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 /*	import com.all.BarGraph;	import com.all.LineGraph;	import com.all.NodeGraph;
 */		public class Main extends Sprite{		// Container for all important nodelists the application should knwo about		
 		private var _years:Array = new Array();
-		private var _curYear:YearVis = null;		public function Main() {			trace("Main::Main() - Sprite Created");
-
+		private var _curYear:YearVis = null;
+		private var _budgetBtns:Array = new Array();
+		public static var _stage:DisplayObject;		public function Main() {			trace("Main::Main() - Sprite Created");
+			_stage = stage;
+		
 			// Import Data			var importer:DataImporter = new DataImporter();			importer.addEventListener(LoadCompleteEvent.LD_COMPLETE,									  loadCompleteHandler);			importer.importGraphML("graphml.xml");						// Set the stage properties			stage.align = StageAlign.TOP_LEFT;
+			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.addEventListener(Event.RESIZE, resizeHandler);
+
 			// Set the background white!			
 			graphics.beginFill(0xFFFFFF,1.0);
 			graphics.drawRect(0,0,stage.stageWidth,stage.stageHeight);
@@ -27,22 +32,34 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 
 			var temp_nodelists:BudgetNodeLists;
 			
-			// Load 4 years of data			_years[Year.Y_2011] = new YearVis(event.lists);
+			// Load 4 years of data			_years[Year.Y_2011] = new YearVis(event.lists,
+																				stage.stageWidth,
+																				stage.stageHeight);
+			_years[Year.Y_2011].draw();
 			trace("Main::loadCompleteHandler() - 2011 Loaded");
 
 			temp_nodelists = _years[Year.Y_2011].getNodeLists();
 			temp_nodelists = BudgetNodeLists.buildYear(temp_nodelists);
-			_years[Year.Y_2010] = new YearVis(temp_nodelists);
+			_years[Year.Y_2010] = new YearVis(temp_nodelists,
+																				stage.stageWidth,
+																				stage.stageHeight);
+			_years[Year.Y_2010].draw();
 			trace("Main::loadCompleteHandler() - 2010 Loaded");
 
 			temp_nodelists = _years[Year.Y_2010].getNodeLists();
 			temp_nodelists = BudgetNodeLists.buildYear(temp_nodelists);
-			_years[Year.Y_2009] = new YearVis(temp_nodelists);
+			_years[Year.Y_2009] = new YearVis(temp_nodelists,
+																				stage.stageWidth,
+																				stage.stageHeight);
+			_years[Year.Y_2009].draw();
 			trace("Main::loadCompleteHandler() - 2009 Loaded");
 
 			temp_nodelists = _years[Year.Y_2009].getNodeLists();
 			temp_nodelists = BudgetNodeLists.buildYear(temp_nodelists);
-			_years[Year.Y_2008] = new YearVis(temp_nodelists);
+			_years[Year.Y_2008] = new YearVis(temp_nodelists,
+																				stage.stageWidth,
+																				stage.stageHeight);
+			_years[Year.Y_2008].draw();
 			trace("Main::loadCompleteHandler() - 2008 Loaded");
 
 			setYear(_years[Year.Y_2011]);
@@ -63,10 +80,11 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 				budgetbtn.x = x + i*budgetbtn.width;
 				budgetbtn.y = 5;
 
-				// Add ot tp the display
+				// Add to the display
 				addChild(budgetbtn);
+				_budgetBtns.push(budgetbtn);
 				budgetbtn.addEventListener(MouseEvent.CLICK,yearButtonHandler,false,0,false);
-				x += 5;
+				x += 5;		
 			}
 
 			return;
@@ -88,12 +106,19 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 
 			trace("Main::setYear() - Setting the Year to be Visualized");
 
+			var i:int;
+
 			if (_curYear != year){
 				if (_curYear != null){
 					removeChild(_curYear);
+					_curYear.turnOffListeners();
 				} 
 				_curYear = year;
+				_curYear.turnOnListeners();
 				addChild(_curYear);
+				for (i=0;i<_budgetBtns.length;i++){
+					addChild(_budgetBtns[i]);
+				}
 			} else {
 				trace("Main::setYear() - Selected a currently selected year");
 			}
@@ -105,22 +130,12 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 			var i:int;
 
 			for (i=0;i<_years.length;i++){
-				_years[i].resize();
+				_years[i].resize(stage.stageWidth,stage.stageHeight);
 			}
 
-/*
-			// Remove all the children
-			_budget_graph.clean();
-			removeChild(_budget_graph);
-			_budget_graph = null;
-
-			// Rebuild the scene
-			buildScene();
-*/
-
-			return;		}				/*     * Called when the application is resized     */				private function resizeHandler(event:Event):void {			trace("Main::resizeHandler() - ",event);			trace("Main::resizeHandler() - stageWidth: " + stage.stageWidth
+			return;		}				/*     * Called when the application is resized     */				public function resizeHandler(event:Event):void {			trace("Main::resizeHandler() - stageWidth: " + stage.stageWidth
 				+ " stageHeight: " + stage.stageHeight);
-			//repositionObjects();
+			repositionObjects();
 			graphics.beginFill(0xFFFFFF,1.0);
 			graphics.drawRect(0,0,stage.stageWidth,stage.stageHeight);
 			graphics.endFill();
