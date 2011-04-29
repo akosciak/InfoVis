@@ -47,8 +47,7 @@
 			Node.max_cost = data.budgetNode.cost;
 			_budget_graph = new BudgetGraph(data.budgetNode,_width,_height);
 			_function_graph = new FunctionGraph(data.functions);
-			//_bar = new PlaceHolder(_width,_height);
-			//_line = new PlaceHolder(_width,_height);
+			_bar = new BarGraph(_selected,(2/5)*_width,(1/4)*_height);			_line = new LineGraph(_selected,(2/5)*_width,(1/4)*_height);
 
 			return;
 		}
@@ -57,6 +56,7 @@
 		public function resize(width:Number,height:Number):void {
 			_budget_graph.y += (height - _height)/2;
 			_budget_graph.yChange += (height - _height)/2;
+			_bar.x = width*(2/5);			_line.x = width*(2/5);
 			_width = width;
 			_height = height;
 			var ratio:Number =  _function_graph.height;
@@ -127,6 +127,10 @@
 			return;
 		}
 
+		private function drawBarGraph():void {			trace("YearVis::drawBarGraph() - Building Bar Graph");					// Add the Bar Graph			_bar.x = _width*(2/5)+30;			_bar.y = 5;			this.addChild(_bar);			_bar.drawBudgetGraph();			return;		}						private function drawLineGraph():void {			trace("YearVis::buildScene() - Building Line Graph");					// Add the Line Graph						_line.x = _width*(2/5)+30;			_line.y = (3/4)*_height-5;			this.addChild(_line);			_line.drawBudgetGraph();			return;		}
+		/*		private function drawNodeGraph():void {			trace("YearVis::buildScene() - Building Budget Graph");					// Add the Function Graph			_budget_node = new NodeGraph(_selectedNodes);			_budget_node.x = stage.stageWidth/2;			_budget_node.y = stage.stageHeight*(2/3);			this.addChild(_budget_node);			_budget_node.drawBudgetGraph();			return;		}
+		*/
+
 		private function drawFunctionGraph():void {
 			trace("YearVis::drawFunctionGraph() - drawing the function graph");	
 	
@@ -141,50 +145,9 @@
 			return;
 		}
 
-/*
-		private function drawBarGraph():void {
-
-			trace("YearVis::drawBarGraph() - Building Bar Graph");		
-			// Add the Bar Graph
-			bar.draw(PlaceHolder.BAR);
-			addChild(bar);
-
-			_budget_bar = new BarGraph(_selectedNodes);			_budget_bar.x = stage.stageWidth/2;			_budget_bar.y = stage.0;			this.addChild(_budget_bar);
-			_budget_bar.drawBudgetGraph();
-
-			return;
-		}
-
-		private function drawLineGraph():void {
-			trace("YearVis::buildScene() - Building Line Graph");					// Add the Line Graph			
-			line.draw(PlaceHolder.LINE);
-			addChild(line);
-
-			_budget_line = new LineGraph(_selectedNodes);			_budget_line.x = stage.stageWidth/2;			_budget_line.y = stage.stageHeight*(1/3);			this.addChild(_budget_line);			_budget_line.drawBudgetGraph();
-
-			return;
-		}
-
-		private function drawNodeGraph():void {
-			trace("YearVis::buildScene() - Building Budget Graph");		
-
-			// Add the Function Graph			_budget_node = new NodeGraph(_selectedNodes);			_budget_node.x = stage.stageWidth/2;			_budget_node.y = stage.stageHeight*(2/3);			this.addChild(_budget_node);			_budget_node.drawBudgetGraph();
-
-			return;
-		}
-
-		/*     * Updates the views if a selection was made in the budget graph view     */ 		public function budgetGraphClick(event:MouseEvent):void {			trace("Main::budgetGraphClick() - update the necessary views");			var displayNode:DisplayNode;			
-			var node:Node;
-			// If the control key is pressed and the target is a Node				  if(event.ctrlKey && event.target is DisplayNode) {	      trace("Main::budgetGraphClick() - Node was selected!");				displayNode = DisplayNode(event.target);
-				node = displayNode.node;
-
-				if (node.isHighlighted){
-					node.unhighlight();
-					_selected.remove(node);
-				} else {
-					node.highlight();					_selected.push(node);
-				}
-				_selected.printTitles();		  }									return;		}		/*     * Updates the view if a selection was made in the function graph view     */		public function functionGraphClick(event:MouseEvent):void {			trace("Main::functionGraphClick() - update the necessary views");			// If the control key is pressed and the target is a Node				  if(event.ctrlKey && event.target is Node) {	      trace("Main::functionGraphClick() - Node was selected!");				_selected.push(Node(event.target));
+		/*
+     * Updates the views if a selection was made in the budget graph view     */ 		public function budgetGraphClick(event:MouseEvent):void {			trace("Main::budgetGraphClick() - update the necessary views");			var displayNode:DisplayNode;						var node:Node;			// If the control key is pressed and the target is a Node			  if(event.ctrlKey && event.target is DisplayNode) {	      trace("Main::budgetGraphClick() - Node was selected!");				displayNode = DisplayNode(event.target);				node = displayNode.node;				if (node.isHighlighted){					node.unhighlight();					_selected.remove(node);					//graphics clear				} else {					node.highlight();					_selected.push(node);				}								_bar.updates(_selected);				//_line.updates(_selected);				//drawLineGraph();				drawBarGraph();				_selected.printTitles();		  }								  		  //when a certain node is selected to view different years		  if(event.altKey && event.target is DisplayNode) {		      trace("AltKey + Click detected");				_line.updates(_selected);				drawLineGraph();				_selected.printTitles();		  }									return;		}
+		/*     * Updates the view if a selection was made in the function graph view     */		public function functionGraphClick(event:MouseEvent):void {			trace("Main::functionGraphClick() - update the necessary views");			// If the control key is pressed and the target is a Node				  if(event.ctrlKey && event.target is Node) {	      trace("Main::functionGraphClick() - Node was selected!");				_selected.push(Node(event.target));
 		  }					return;		}
 
  		/*
