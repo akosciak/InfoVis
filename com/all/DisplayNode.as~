@@ -1,0 +1,144 @@
+﻿package com.all {
+	
+	import flash.display.Sprite;
+	import flash.events.MouseEvent;
+	import flash.geom.Point;
+	
+	/*
+   * Used in the BudgetGraph to give the node some extra 
+   * functionality.
+   */
+	public class DisplayNode extends Sprite {
+
+		// Display Node States
+		public static const DONT_CARE:int = -1;
+		public static const CLEAR:int = 6;
+		public static const NONE:int = 0;
+		public static const SINGLE:int = 8;
+		public static const MULTIPLE:int = 9;
+
+		public static function printState(state:int):void {
+	
+			switch(state){
+				case CLEAR:
+					trace("State:CLEAR"); break;
+				case NONE:
+					trace("State:NONE"); break;
+				case SINGLE:
+					trace("State:SINGLE"); break;
+				case MULTIPLE: 
+					trace("State:MULTIPLE"); break;
+			}
+
+			return;
+		}
+
+		// Allowed Searching
+		public static const REVENUE:int = 3;
+		public static const SPENDING:int = 4;
+		public static const ALL:int = 5;
+
+		// If All DataNode then
+/*
+		public static const SINGLE_REVENUE:int = 10;
+		public static const MULTIPLE_REVENUE:int = 11;
+		public static const SINGLE_SPENDING:int = 12;
+		public static const MULTIPLE_SPENDING:int = 13;
+		public static const SINGLE_ALL:int = 14;
+		public static const MULTIPLE_ALL:int = 15;
+*/
+
+		// Lists the nodes in all 4 directions
+		public var up:DisplayNode = null;
+		public var down:DisplayNode = null;
+		public var right:DisplayNode = null;
+		public var left:DisplayNode = null;
+
+		public var upOpen:Boolean;
+		public var downOpen:Boolean;
+		public var rightOpen:Boolean;
+		public var leftOpen:Boolean;
+
+		public var node:Node = null;
+
+		// Properties
+		public var allowed:int;
+		public var state:int;
+
+		/*
+		 * Constructors
+		 */ 
+		public function DisplayNode(node:Node,allowed:int):void{
+			// Use the input to initialize the DisplayNode
+			this.allowed = allowed;
+			this.state = CLEAR;
+			this.mouseChildren = false;
+			this.node = node;
+
+			upOpen = false;
+			downOpen = false;
+			rightOpen = false;
+			leftOpen = false;
+			doubleClickEnabled = true;
+
+			addChild(node);
+			return;
+		}
+
+		public function print():void{
+			trace("Title:",node.title);
+			DisplayNode.printState(this.state);
+			trace("OpenDirections:",
+				"[upOpen=",upOpen,
+				"][downOpen=",downOpen,
+				"][rightOpen=",rightOpen,
+				"][leftOpen=",leftOpen,"]");
+			return;
+		}
+
+		public static function initDisplayNodes(nodeList:NodeList,dir:int,
+																			      permissions:int):DisplayNode {
+			trace("BudgetGraph::initDisplayNodes() - Init. DisplayNodes from a NodeList");
+
+			var i:int;
+			var central:DisplayNode;
+			var curr:DisplayNode;
+			var last:DisplayNode;
+
+			// Setup the very first node in the list
+			central = new DisplayNode(nodeList.getNodeAt(0),permissions);
+			last = central;
+
+			// Setup the rest in the list
+			for (i=1;i<nodeList.length;i++){
+				curr = new DisplayNode(nodeList.getNodeAt(i),permissions);
+
+				switch(dir){				
+					case DisplayDirection.UP:
+						curr.down = last;
+						last.up = curr;
+						break;
+					case DisplayDirection.DOWN:
+						curr.up = last;
+						last.down = curr;
+						break;
+					case DisplayDirection.LEFT:
+						curr.right = last;
+						last.left = curr;
+						break;
+					case DisplayDirection.RIGHT:
+						curr.left = last;
+						last.right = curr;
+						break;
+					default:
+						break;
+				}
+
+				last = curr;
+			}
+
+			return central;
+		}
+
+	}
+}

@@ -1,16 +1,2 @@
 Loading configuration file /home/adrian/.flex/frameworks/flex-config.xml
-/home/adrian/actionscript/infovis/com/all/BudgetGraph.as(90): col: 39 Error: Call to a possibly undefined method getCostRadius through a reference with static type com.all:DisplayNode.
-
-						nextRadius = _centralNode.right.getCostRadius();
-						                                ^
-
-/home/adrian/actionscript/infovis/com/all/BudgetGraph.as(98): col: 38 Error: Call to a possibly undefined method getCostRadius through a reference with static type com.all:DisplayNode.
-
-						nextRadius = _centralNode.left.getCostRadius();
-						                               ^
-
-/home/adrian/actionscript/infovis/com/all/BudgetGraph.as(126): col: 43 Error: Call to a possibly undefined method getCostRadius through a reference with static type com.all:DisplayNode.
-
-			_centralPoint = new Point(_centralNode.getCostRadius(),_height/2);
-			                                       ^
-
+/home/adrian/actionscript/infovis/Main.swf (17599 bytes)
