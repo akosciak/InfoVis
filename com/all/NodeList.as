@@ -13,7 +13,7 @@
 		// An ID to give to NodeLists
 		private static var NodeListID:int = 0;
 
-		//The Nodes and different stats about them
+		// The Nodes and different stats about them
 		protected var _nodes:Vector.<Node>;
 		public var length:uint;
 		public var max_cost:Number;

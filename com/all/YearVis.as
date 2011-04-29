@@ -3,6 +3,8 @@
 	import flash.display.MovieClip;
 	import flash.events.MouseEvent;
 	import flash.events.Event;
+	import flash.geom.Matrix;
+	import flash.geom.Point;
 
 	public class YearVis extends MovieClip{
 
@@ -15,11 +17,14 @@
 		// VIEWS: The parts of the application!
 		// -----------------------------------------------
 
+		private var _originalWidth:Number;
+		private var _originalHeight:Number;
 		private var _width:Number;
 		private var _height:Number;
 
 		// The views being shown by the application		private var _budget_graph:BudgetGraph;
-		//private var _function_graph:FunctionGraph;
+		private var _function_graph:FunctionGraph;
+		private var _box:HoverBox;
 
 		// Placeholders for the real thing
 		private var _bar:PlaceHolder;
@@ -32,22 +37,35 @@
 														width:Number,
 														height:Number):void {
 			_nodelists = data;
+			_originalWidth = width;
+			_originalHeight = height;
 			_width = width;
 			_height = height;
 			_selected = new NodeList();
 
-			_budget_graph = new BudgetGraph(_nodelists.funds,_width,_height);
+			data.createBudgetNode();
+			Node.max_cost = data.budgetNode.cost;
+			_budget_graph = new BudgetGraph(data.budgetNode,_width,_height);
+			_function_graph = new FunctionGraph(data.functions);
 			//_bar = new PlaceHolder(_width,_height);
 			//_line = new PlaceHolder(_width,_height);
-			//_function_graph = new FunctionGraph();
+
 			return;
 		}
 
 		// Resize the year visualization
 		public function resize(width:Number,height:Number):void {
 			_budget_graph.y += (height - _height)/2;
+			_budget_graph.yChange += (height - _height)/2;
 			_width = width;
 			_height = height;
+			var ratio:Number =  _function_graph.height;
+			_function_graph.height = _height - 20;
+			ratio = (_function_graph.height/ratio);
+			_function_graph.width *= ratio;
+			_function_graph.x = _width - _function_graph.width - 10;
+			_function_graph.y = 10;
+
 			return;
 		}
 
@@ -55,6 +73,10 @@
 			_budget_graph.removeEventListener( MouseEvent.CLICK,
 																			budgetGraphClick);
 			_budget_graph.turnOffListeners();
+			// Event Listeners for displaying hover boxes (details of the nodes)
+			removeEventListener(MouseEvent.MOUSE_OVER, manageMouseOver);
+			removeEventListener(MouseEvent.MOUSE_OUT, manageMouseOut);
+			removeEventListener(MouseEvent.MOUSE_MOVE, manageMouseMove);
 			return;
 		}
 
@@ -62,7 +84,11 @@
 			// Listen for selections			_budget_graph.addEventListener( MouseEvent.CLICK,
 																			budgetGraphClick,
 																			false,0,true);
-			_budget_graph.turnOnListeners();			
+			_budget_graph.turnOnListeners();	
+			// Event Listeners for displaying hover boxes (details of the nodes)
+			addEventListener(MouseEvent.MOUSE_OVER, manageMouseOver, true, 0, true);
+			addEventListener(MouseEvent.MOUSE_OUT, manageMouseOut, true, 0, true);
+			addEventListener(MouseEvent.MOUSE_MOVE, manageMouseMove, true, 0, true);		
 			return;
 		}
 
@@ -86,13 +112,13 @@
 			addChild(_line);
 */
 			drawBudgetGraph();
-			//drawFunctionGraph();
+			drawFunctionGraph();
 			//drawBarGraph();
 			//drawLineGraph();
 			//drawNodeGraph();
 			return;		}
 
-		private function drawBudgetGraph():void {
+		public function drawBudgetGraph():void {
 			trace("YearVis::drawBudgetGraph() - drawing the budget graph");	
 	
 			// Add the Budget Graph
@@ -101,22 +127,21 @@
 			return;
 		}
 
-/*
 		private function drawFunctionGraph():void {
-			trace("YearVis::buildScene() - Building Function Graph");		
-
-			_nodelists.functions.setSearch(false,false);
-			_nodelists.functions.sort();
-			_nodelists.functions.x = stage.stageWidth*9/10;
-			_nodelists.functions.y = 0;
-
-			addChild(_nodelists.functions);
-			_nodelists.functions.drawNodes(DisplayNodeList.DRAW_DOWN,
-				DisplayNodeList.TOP,1.0);
+			trace("YearVis::drawFunctionGraph() - drawing the function graph");	
+	
+			// Add the Function Graph			this.addChild(_function_graph);			_function_graph.drawFunctionGraph();
+			var ratio:Number =  _function_graph.height;
+			_function_graph.height = _height - 20;
+			ratio = (_function_graph.height/ratio);
+			_function_graph.width *= ratio;
+			_function_graph.x = _width - _function_graph.width - 10;
+			_function_graph.y = 10;
 
 			return;
 		}
 
+/*
 		private function drawBarGraph():void {
 
 			trace("YearVis::drawBarGraph() - Building Bar Graph");		
@@ -161,6 +186,45 @@
 				}
 				_selected.printTitles();		  }									return;		}		/*     * Updates the view if a selection was made in the function graph view     */		public function functionGraphClick(event:MouseEvent):void {			trace("Main::functionGraphClick() - update the necessary views");			// If the control key is pressed and the target is a Node				  if(event.ctrlKey && event.target is Node) {	      trace("Main::functionGraphClick() - Node was selected!");				_selected.push(Node(event.target));
 		  }					return;		}
+
+ 		/*
+		 * Show the details of a node when the user hovers over it.
+		 */
+		public function manageMouseOver(event:MouseEvent):void{
+			if (event.target is DisplayNode && _box == null){
+				_box = new HoverBox(DisplayNode(event.target).node);
+				_box.draw();
+				addChild(_box);
+			}
+			return;
+		}
+ 
+		public function manageMouseOut(event:MouseEvent):void{
+			if (_box != null && event.target is DisplayNode){
+				removeChild(_box);
+				_box = null;
+			}
+			return;
+		}
+
+		private function setBoxAtMouse():void {
+			
+			if (_box != null){
+				_box.x = stage.mouseX;
+				_box.y = stage.mouseY;
+			}
+
+			return;
+		}
+
+		private function manageMouseMove(event:MouseEvent):void{
+			var target:* = event.target;
+			if (_box && event.target is DisplayNode){
+				_box.x = stage.mouseX;
+				_box.y = stage.mouseY;
+			}
+			return;
+		}
 	}
 	
 }

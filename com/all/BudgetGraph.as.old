@@ -1,353 +1,646 @@
 ﻿package com.all {
 	
 	import flash.display.Sprite;
+	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
-	import flash.events.TimerEvent;
-	import flash.utils.Timer;
 	import flash.geom.Point;
-	
+
 	public class BudgetGraph extends Sprite{
 
+		// KeyBoard Event KeyCodes
+		private static const UP:int = 87;
+		private static const DOWN:int = 83;
+		private static const LEFT:int = 65;
+		private static const RIGHT:int = 68;
+	
 		// The node that has current focus
-		private var _centralNode:Node;
+		private var _centralRadius:Number = 100; // the radius that each central node needs to conform to
+		private var _centralNode:DisplayNode;
+		private var _centralScale:Number = 1.0;
+		private var _centralPoint:Point;
 
-		public static var main:BudgetGraph;
-
-		private static const FISH_EYE_TIMER:int = 100;
-		private static const SIZE_MULTIPLIER:Number = 25000;
-
-		private var _timer:Timer;
-		private var _original:Point;
-		private var _original_radius:Number;
-		private var _box:HoverBox;
-		private var _root_nodes:DisplayNodeList;
-
-		public function BudgetGraph(rootnodes:NodeList):void  {
-			// constructor code
-			trace("BudgetGraph::BudgetGraph() - Constructing the Budget Graph");
+		private var _rootNodes:NodeList;
+		private var _width:Number;
+		private var _height:Number;
 			
-			// The Root Node List drawn first (should be the Funds)
-			_root_nodes = DisplayNodeList;
-
-			// Setup the fish eye timer
-			_timer = new Timer(FISH_EYE_TIMER,0);
-			_timer.addEventListener(TimerEvent.TIMER,updateFishEye);
-
-			// Set the Node properties that will determine the size of the drawing
-			Node.max_cost = _root_nodes.max_cost;
-			Node.multiplier = SIZE_MULTIPLIER;
-
-			// Event Listeners for displaying hover boxes (details of the nodes)
-			addEventListener(MouseEvent.MOUSE_OVER, manageMouseOver, true, 0, true);
-			addEventListener(MouseEvent.MOUSE_OUT, manageMouseOut, true, 0, true);
-			addEventListener(MouseEvent.MOUSE_MOVE, manageMouseMove, true, 0, true);
-
-			// Set the listeners for the fish-eye timer
-			addEventListener(MouseEvent.MOUSE_DOWN,manageMouseDown,false,0,true);
-			addEventListener(MouseEvent.MOUSE_UP,manageMouseUp,false,0,true);
+		/*
+     * Constructor, the Nodelist given is used as the rootNodeList
+     */
+		public function BudgetGraph(rootNodes:NodeList,width:Number,height:Number):void {
+			_width = width;
+			_height = height;
+			_rootNodes = rootNodes;
 			
-			// Draw a rectangle
-			this.opaqueBackground = 0xFFFFFF;
+			// Set the background white!			
 			graphics.beginFill(0xFFFFFF,1.0);
-			graphics.drawRect(0,0,x,y);
+			graphics.drawRect(0,0,_width,_height);
 			graphics.endFill();
-			_original = new Point(x,y);
-			_original_radius = 0;
-
-			main = this;
 
 			return;
 		}
 
-		public function clean():void {
-
-			// Cleanup all event listeners
-			_timer.removeEventListener(TimerEvent.TIMER,updateFishEye);
-			removeEventListener(MouseEvent.MOUSE_DOWN,manageMouseDown);
-			removeEventListener(MouseEvent.MOUSE_UP,manageMouseUp);
-			removeEventListener(MouseEvent.ROLL_OVER, manageMouseOver);
-			removeEventListener(MouseEvent.ROLL_OUT, manageMouseOut);
-			removeEventListener(MouseEvent.MOUSE_MOVE, manageMouseMove);
-
-			main = null;
-			_timer = null;
-			_box = null;
-			_root_nodes = null;
-
+		public function turnOffListeners():void {
+			Main._stage.removeEventListener(KeyboardEvent.KEY_UP, keyUpHandler);
+			Main._stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
+			removeEventListener(MouseEvent.CLICK, clickHandler);
 			return;
 		}
 
-		/*
-     * Draw the budget graph.
-     */ 
-		public function drawBudgetGraph():void {
-			
-			trace("BudgetGraph::drawBudgetGraph() - drawing the budget graph "
-				+height+","+width);
-
-			_root_nodes.setSearch(true,true);
-			_root_nodes.sort(NodeList.HIGH);
-			_root_nodes.x = 15;
-			_root_nodes.y = this.height/2;
-			_original_radius = _root_nodes.getNodeAt(0).getCostRadius();
-			_original.x = 15;
-			_original.y = this.height/2;
-			this.addChild(_root_nodes);
-			_root_nodes.drawNodes(DisplayNodeList.DRAW_RIGHT,DisplayNodeList.LEFT);
-
+		public function turnOnListeners():void {
+			Main._stage.addEventListener(KeyboardEvent.KEY_UP, keyUpHandler);
+			Main._stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);	
+			addEventListener(MouseEvent.CLICK, clickHandler);
 			return;
 		}
 
-		private var _x:int;
-		private var _y:int;
-
-		/*
-     * Click and Hold Event Handling to redraw with a fish eye.
-     */
-		private function manageMouseDown(event:MouseEvent):void{
-  		trace("BudgetGraph::MOUSE_DOWN");
-			_timer.start();
-			_y = stage.mouseY;
-			return;
-		}
-
-		private function manageMouseUp(event:MouseEvent):void{
-  		trace("BudgetGraph::MOUSE_UP");
-			_timer.stop();
-			return;
-		}
-
-		private var state:int = 0;
-
-		private function isDown(y_old:Number,y_new:Number):Boolean {
-			
-			var isDown:Boolean;
-		
-			if (y_old - y_new > 0){
-				isDown = false;
-			} else {
-				isDown = true;
-			}
-
-			return isDown;
-		}
-
-		private function getState(isDown:Boolean):Boolean {
-
-			var isUnder:Boolean;
-	
-			if (isDown){
-				state++;
-			} else {
-		  	state--;
-			}
-
-			if (state < 0){
-				isUnder = false;
-			} else {
-				isUnder = true;
-			}
-
-			return isUnder;
-		}
-	
-		private function getStateOld():Boolean {
-
-			var isUnder:Boolean;
-			var rootNode:Node;
-			var origin:Point = new Point();
-			var global:Point;
-
-			// Get the root node coordinates
-			rootNode = _root_nodes.getNodeAt(0);
-			origin.y = rootNode.y;
-			origin.x = rootNode.x;
-
-			global = localToGlobal(origin);
-			trace("Global",global);
-			if (global.y < 0 ){
-				trace("I'm Over");
-				isUnder = false;
-			} else {
-				trace("I'm Under");
-				isUnder = true;
-			}				
-
-			return isUnder;
-		}
-
-		private var sizeArray:Array = new Array();
-		private var sizeScale:Number = 1.0;
-
-		private function getSizeScaleChange(isUnder:Boolean,isDown:Boolean):Number {
-
-			if (isDown && isUnder){			
-				sizeScale = sizeScale*1.05;
-				sizeArray.push(sizeScale);
-			} else if (isDown && !isUnder){
-				sizeScale = sizeArray.pop();
-			} else if (!isDown && !isUnder){
-				sizeScale = sizeScale*1.05;
-				sizeArray.push(sizeScale);
-			} else if (!isDown && isUnder){
-				sizeScale = sizeArray.pop();
-			}
-
-			return sizeScale;
-		}
-
-		private function getSizeScaleChangeOld(isUnder:Boolean,isDown:Boolean):Number {
-
-			var scaleChange:Number;
-
-			if (isDown && isUnder){			
-					scaleChange = 1.05;
-			} else if (isDown && !isUnder){
-					scaleChange = 1/1.05;
-			} else if (!isDown && !isUnder){
-					scaleChange = 1.05;
-			} else if (!isDown && isUnder){
-					scaleChange = 1/1.05;
-			}
-
-			return scaleChange;
-		}
-
-		private var posArray:Array = new Array();
-		private var posScale:Number = 10;
-
-		private function getPosScaleChange(isUnder:Boolean,isDown:Boolean):Number {
-
-			var scaleChange:Number;
-
-			if (isDown && isUnder){			
-				scaleChange = -1.10;
-				posScale = Math.abs(posScale)*scaleChange;
-				posArray.push(posScale);
-			} else if (isDown && !isUnder){
-				posScale = -1*posArray.pop();
-			} else if (!isDown && !isUnder){
-				scaleChange = 1.30;
-				posScale = Math.abs(posScale)*scaleChange;
-				posArray.push(posScale);
-			} else if (!isDown && isUnder){
-				posScale = -1*posArray.pop();
-			}
-
-			return posScale;
-		}
-
-		private function getScaleChangeOld(isUnder:Boolean):Number {
-
-			var scaleChange:Number;
-
-			if (!isUnder){
-				scaleChange = stage.mouseY - _y;
-			} else {
-				scaleChange = _y - stage.mouseY;
-			}					
-
-			return scaleChange;
-		}
-
-		private function scaleAndMove(isDown:Boolean,isUnder:Boolean,
-			reset:Boolean = false):void {
-
-			var posScaleFactor:Number;
-			var sizeScaleFactor:Number;
-
-			// Scale the graph
-			if (reset){
-				trace("Reset!");
-				_root_nodes.scaleX = 1.0;
-				_root_nodes.scaleY = 1.0;
-				_root_nodes.y = _original.y;
-				_root_nodes.x = 15;
-				posScale = 10;
-				sizeScale = 1.0;
-			} else {
-				sizeScaleFactor = getSizeScaleChange(isUnder,isDown);
-				_root_nodes.scaleX = sizeScaleFactor;      
-				_root_nodes.scaleY = sizeScaleFactor;
-
-				// Move the graph
-				posScaleFactor = getPosScaleChange(isUnder,isDown);
-				_root_nodes.y += posScaleFactor;
-				_root_nodes.x = _original.x + _original_radius*(1-_root_nodes.scaleX);
-
-				trace("states[",isDown,isUnder,
-					"]:p-factor[",posScaleFactor,
-					"]:s-factor[",sizeScaleFactor,"]");
-			}
-
-			return;
-		}
-
-		/*
-     * Zoom in or out, depending on the direction of movement.
-     */
-		private function updateFishEye(event:TimerEvent):void {
-			//trace("BudgetGraph::updateFishEye() - BANG!");
-
-			var scaleChange:Number;
-			var isUnder:Boolean;
-			var dirState:Boolean;
-
-			if (stage.mouseY != _y){
-
-				dirState = isDown(_y,stage.mouseY);
-				isUnder = getState(dirState);
-
-				// Don't scale and move at zero
-				if (state == 0){
-					scaleAndMove(dirState,isUnder,true);
-				} else {
-					scaleAndMove(dirState,isUnder);
-				}
-
-				_y = stage.mouseY;
-			}
-		
-			setBoxAtMouse();
+		private function keyUpHandler(event:KeyboardEvent):void {
+			Main._stage.addEventListener(KeyboardEvent.KEY_UP, keyDownHandler);
 			return;			
 		}
 
- 		/*
-		 * Show the details of a node when the user hovers over it.
-		 */
-		public function manageMouseOver(event:MouseEvent):void{
-			if (event.target is Node && _box == null){
-				_box = new HoverBox(Node(event.target));
-				_box.draw();
-				addChild(_box);
-			}
-			return;
-		}
- 
-		public function manageMouseOut(event:MouseEvent):void{
-			if (_box != null && event.target is Node){
-				removeChild(_box);
-				_box = null;
-			}
+		private function scaleBudgetGraph(ratio:Number):void {
+
+			var originalCentralPoint:Point = _centralPoint;
+			_centralPoint = new Point();
+		
+			_centralPoint.x = originalCentralPoint.x*ratio;
+			_centralPoint.y = originalCentralPoint.y*ratio;
+
+			this.width *= ratio;
+			this.height *= ratio;
+			_centralScale *= ratio;
+	
+			this.x += originalCentralPoint.x - _centralPoint.x;
+			this.y += originalCentralPoint.y - _centralPoint.y;
+
 			return;
 		}
 
-		private function setBoxAtMouse():void {
+		private function displayNodeList( nodeList:NodeList,pencil:Point,
+																			dir:int,start:int,perm:int):DisplayNode {
+			trace("BudgetGraph::displayNodeList() - drawing out a new list");
+			var displayNode:DisplayNode;
+		
+			if (nodeList.length > 0){
+				nodeList.sort(NodeList.HIGH);
+				drawList(pencil,nodeList,dir,start);
+				displayNode = initDisplayNodes(nodeList,dir,perm);
+			} else {
+				trace("BudgetGraph::displayNodeList() - nodelist is empty!");
+			}
+
+			return displayNode;
+		}
+
+		private function findRootByAllowed(displayNode:DisplayNode):DisplayNode {
+			trace("BudgetGraph::findRootByAllowed()");	
+			var rootNode:DisplayNode = null;
+	
+			// If its the root list then forget it
+			if (displayNode.allowed != DisplayNode.ALL){
+
+				// If its oriented verticallly then the root can either
+				// be found at the bottom or top of the list
+				if (displayNode.orientedVertical){
+					if (displayNode.allowed == DisplayNode.REVENUE){
+						rootNode = displayNode;
+						while (rootNode != null){
+							rootNode = rootNode.down;
+						}					
+					} else {
+						rootNode = displayNode;
+						while (rootNode.up != null){
+							rootNode = rootNode.up;
+						}
+					}
+				// If horizontally, then its always going to be the left most node
+				} else {
+					rootNode = displayNode;
+					while (rootNode.left != null){
+						rootNode = rootNode.left;
+					}
+				}
+			}
 			
-			if (_box != null){
-				_box.x = stage.mouseX;
-				_box.y = stage.mouseY;
+			return rootNode;
+		}
+
+		// NOTE: does not use class variables
+		private function handleClearState(displayNode:DisplayNode):void {
+			trace("BudgetGraph::handleClearState() - Error: Should be no way", 
+				"to click a CLEAR node");
+			displayNode.print();
+			return;
+		}
+
+		private function drawSubNodes( displayNode:DisplayNode,subNodes:NodeList,
+																	dir:int,permissions:int):void {
+			trace("BudgetGraph::createNodes() - Creating Nodes...");
+
+			var node:Node = displayNode.node;
+			var pencil:Point = new Point();
+
+			switch(dir){
+				case DisplayDirection.UP:
+					if (displayNode.up == null){
+						pencil.x = node.x;
+						pencil.y = node.y - node.getCostRadius();
+						displayNode.up = displayNodeList(	subNodes,pencil,dir,
+																							DisplayStartLoc.BOTTOM,
+																							permissions);
+						if (displayNode.up != null){
+							displayNode.up.down = displayNode;
+							displayNode.up.downOpen = true;
+							displayNode.upOpen = true;
+						}
+					}
+					break;
+				case DisplayDirection.DOWN:
+					if (displayNode.down == null){
+						pencil.x = node.x;
+						pencil.y = node.y + node.getCostRadius();
+						displayNode.down = displayNodeList(	subNodes,pencil,dir,
+																								DisplayStartLoc.TOP,
+																								permissions);
+						if (displayNode.down != null){
+							displayNode.down.up = displayNode;
+							displayNode.down.upOpen = true;
+							displayNode.downOpen = true;
+						}
+					}
+					break;
+				case DisplayDirection.RIGHT:
+					if (displayNode.right == null){
+						pencil.x = node.x + node.getCostRadius();
+						pencil.y = node.y;
+						displayNode.right = displayNodeList(subNodes,pencil,dir,
+																								DisplayStartLoc.LEFT,
+																								permissions);
+						if (displayNode.up != null){
+							displayNode.right.left = displayNode;
+							displayNode.right.leftOpen = true;
+							displayNode.rightOpen = true;
+						}
+					}
+					break;
 			}
 
 			return;
 		}
 
-		private function manageMouseMove(event:MouseEvent):void{
-			var target:* = event.target;
-			if (_box && event.target is Node){
-				_box.x = stage.mouseX;
-				_box.y = stage.mouseY;
+		private function drawSubNodesByAllowed(displayNode:DisplayNode):void {
+			trace("BudgetGraph::drawSubNodesByAllowed()");
+			var node:Node = displayNode.node;
+
+			if (displayNode.allowed == DisplayNode.ALL){
+				drawSubNodes(displayNode,node.revenue,DisplayDirection.UP,
+					DisplayNode.REVENUE);
+				drawSubNodes(displayNode,node.spending,DisplayDirection.DOWN,
+					DisplayNode.SPENDING);
+			} else {
+				if (displayNode.orientedVertical){
+					if (displayNode.allowed == DisplayNode.REVENUE){
+						drawSubNodes(displayNode,node.revenue,DisplayDirection.RIGHT,
+							DisplayNode.REVENUE);
+					} else {
+						drawSubNodes(displayNode,node.spending,DisplayDirection.RIGHT,
+							DisplayNode.SPENDING);
+					}
+				} else {
+					if (displayNode.allowed == DisplayNode.REVENUE){
+						drawSubNodes(displayNode,node.revenue,DisplayDirection.UP,
+							DisplayNode.REVENUE);
+					} else {
+						drawSubNodes(displayNode,node.spending,DisplayDirection.DOWN,
+							DisplayNode.SPENDING);
+					}
+				}
 			}
+
+			return;	
+		}
+
+		private function handleNoneState(displayNode:DisplayNode):void {
+			trace("BudgetGraph::handleNoneState()");
+			var rootNode:DisplayNode;
+			var node:Node = displayNode.node;	
+
+			rootNode = findRootByAllowed(displayNode);
+			while ( rootNode != null ){
+				rootNode.print();
+				clearDisplayNodes(rootNode,rootNode.orientedVertical,DisplayNode.SINGLE);
+				clearDisplayNodes(rootNode,rootNode.orientedVertical,DisplayNode.MULTIPLE);
+				rootNode = findRootByAllowed(rootNode);
+			}
+			clearDisplayNodes(displayNode,displayNode.orientedVertical,
+														DisplayNode.MULTIPLE);
+
+			drawSubNodesByAllowed(displayNode);			
+
+			addDisplayNodeDir(displayNode.left,DisplayDirection.LEFT);			
+			addDisplayNodeDir(displayNode.right,DisplayDirection.RIGHT);		
+			addDisplayNodeDir(displayNode.up,DisplayDirection.UP);
+			addDisplayNodeDir(displayNode.down,DisplayDirection.DOWN);			
+
+			trace("Setting the States");
+			displayNode.state = DisplayNode.SINGLE;
+			if (rootNode != null){
+				rootNode.state = DisplayNode.MULTIPLE;
+			}
+			return;
+		}
+
+		private function handleSingleState(displayNode:DisplayNode):void {
+			trace("BudgetGraph::handleSingleState() - Not doing anything");
+			return;
+		}
+
+		private function handleMultipleState(displayNode:DisplayNode):void {
+			trace("BudgetGraph::handleMultipleState() - Not doing anything");
+			return;
+		}
+
+		private function clickHandler(event:MouseEvent):void {
+			trace("BudgetGraph::clickHandler()");
+			var displayNode:DisplayNode;
+			var node:Node;
+			var pencil:Point = new Point();
+
+			// If the control key is pressed and the target is a Node				  if(event.target is DisplayNode) {	      trace("BudgetGraph::clickHandler() - Node was selected!");
+				displayNode = DisplayNode(event.target);
+				node = displayNode.node;
+
+				// Depending on the state you need to draw something ...
+				switch(displayNode.state){
+					case DisplayNode.CLEAR:
+						handleClearState(displayNode); break;
+					case DisplayNode.NONE:
+						handleNoneState(displayNode); break;
+					case DisplayNode.SINGLE:
+						handleSingleState(displayNode); break;
+					case DisplayNode.MULTIPLE:
+						handleMultipleState(displayNode); break;
+					default:
+						break;
+				}
+		  }						
+			return;
+		}
+
+		private function removeSubGraph(displayNode:DisplayNode,from:int):void {
+
+			if (displayNode != null){
+
+				displayNode.downOpen = false;
+				displayNode.upOpen = false;
+				displayNode.leftOpen = false;
+				displayNode.rightOpen = false;
+
+				if (from != DisplayDirection.DOWN){
+					removeSubGraph(displayNode.down,DisplayDirection.UP);
+				} 
+				if (from != DisplayDirection.UP){
+					removeSubGraph(displayNode.up,DisplayDirection.DOWN);
+				} 
+				if (from != DisplayDirection.LEFT){
+					removeSubGraph(displayNode.left,DisplayDirection.RIGHT);
+				} 
+				if (from != DisplayDirection.RIGHT){
+					removeSubGraph(displayNode.right,DisplayDirection.LEFT);	
+				}
+
+				displayNode.state = DisplayNode.CLEAR;
+				displayNode.print();
+				trace("blah");
+				removeChild(displayNode);
+				trace("blah");
+			}
+
+			return;
+		}
+
+		private function clearDisplayNodes( displayNode:DisplayNode,
+																				isVertical:Boolean,
+																				state:int):void{
+			trace("BudgetGraph::clearDisplayNodes()");
+
+			var node:DisplayNode;
+
+			if (isVertical){
+				node = displayNode.up;
+				while (node != null){
+					if (node.state == state){
+						removeSubGraph(node.left,DisplayDirection.RIGHT);
+						removeSubGraph(node.right,DisplayDirection.LEFT);
+						node.rightOpen = false;
+						node.leftOpen = false;
+						node.state = DisplayNode.NONE;
+					}
+					node = node.up;				
+				}
+				node = displayNode.down;
+				while (node != null){
+					if (node.state == state){
+						removeSubGraph(node.right,DisplayDirection.LEFT);
+						removeSubGraph(node.left,DisplayDirection.RIGHT);
+						node.rightOpen = false;
+						node.leftOpen = false;
+						node.state = DisplayNode.NONE;
+					}
+					node = node.down;				
+				}
+			} else {
+				node = displayNode.right;
+				while (node != null){
+					if (node.state == state){
+						removeSubGraph(node.up,DisplayDirection.DOWN);
+						removeSubGraph(node.down,DisplayDirection.UP);
+						node.upOpen = false;
+						node.downOpen = false;
+						node.state = DisplayNode.NONE;
+					}
+					node = node.right;				
+				}
+				node = displayNode.left;
+				while (node != null){
+					if (node.state == state){
+						removeSubGraph(node.up,DisplayDirection.DOWN);
+						removeSubGraph(node.down,DisplayDirection.UP);
+						node.upOpen = false;
+						node.downOpen = false;
+						node.state = DisplayNode.NONE;
+					}
+					node = node.left;				
+				}
+			}
+			
+			return;
+		}
+
+		private function addDisplayNodeDir(displayNode:DisplayNode,dir:int):void {
+
+      trace("BudgetGraph::addDisplayNodeDir() - adding to display");
+			var node:DisplayNode = displayNode;
+
+			while (node != null){
+				if (node.state == DisplayNode.CLEAR){
+					addChild(node);
+					node.state = DisplayNode.NONE;
+				} 
+
+				switch(dir){				
+					case DisplayDirection.UP:
+						node = node.up;	break;
+					case DisplayDirection.DOWN:
+						node = node.down;	break;
+					case DisplayDirection.LEFT:
+						node = node.left;	break;
+					case DisplayDirection.RIGHT:
+						node = node.right;	break;
+					default:
+						break;
+				}
+
+			}
+
+			return;
+		}
+
+    private function keyDownHandler(event:KeyboardEvent):void {
+
+			var currRadius:Number = _centralNode.node.getCostRadius();
+			var nextRadius:Number;
+			var shift:Number;
+
+			switch(event.keyCode){
+				case DOWN:
+					if (_centralNode.downOpen){
+						nextRadius = _centralNode.down.node.getCostRadius();
+						shift = (_centralScale*currRadius) + (_centralScale*nextRadius);
+						this.y -= shift;
+						_centralPoint.y += shift; 
+						scaleBudgetGraph(currRadius/nextRadius);
+						_centralNode = _centralNode.down;
+					}
+					break;
+				case UP:
+					if (_centralNode.upOpen){
+						nextRadius = _centralNode.up.node.getCostRadius();
+						shift = (_centralScale*currRadius) + (_centralScale*nextRadius);
+						this.y += shift;
+						_centralPoint.y -= shift; 
+						scaleBudgetGraph(currRadius/nextRadius);
+						_centralNode = _centralNode.up;
+					}
+					break;
+				case RIGHT:
+					if (_centralNode.rightOpen){
+						nextRadius = _centralNode.right.node.getCostRadius();
+						shift = (_centralScale*currRadius) + (_centralScale*nextRadius);
+						this.x -= shift;
+						_centralPoint.x += shift; 
+						scaleBudgetGraph(currRadius/nextRadius);
+						_centralNode = _centralNode.right;
+					}
+					break;	
+				case LEFT:
+					if (_centralNode.leftOpen){
+						nextRadius = _centralNode.left.node.getCostRadius();
+						shift = (_centralScale*currRadius) + (_centralScale*nextRadius);
+						this.x += shift;
+						_centralPoint.x -= shift; 
+						scaleBudgetGraph(currRadius/nextRadius);
+						_centralNode = _centralNode.left;
+					}
+					break;
+				default:
+					break;
+			}			
+
+			_centralNode.print();
+			Main._stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
+			return;
+    }
+
+		public function drawBudgetGraph():void {
+			trace("BudgetGraph::drawBudgetGraph() - drawing the budget graph");
+
+			var pencil:Point = new Point(0,0);
+			var node:DisplayNode;
+			var i:int;
+
+			Node.max_cost = _rootNodes.getNodeAt(0).cost;
+			pencil.x = _width/2;
+			pencil.y = _height/2;
+	
+			_rootNodes.sort(NodeList.HIGH);
+
+			drawList(pencil,_rootNodes,
+							 DisplayDirection.RIGHT,
+							 DisplayStartLoc.LEFT);
+
+			_centralNode = initDisplayNodes(_rootNodes,
+																			DisplayDirection.RIGHT,
+																			DisplayNode.ALL);
+			_centralPoint = new Point(_width/2+_centralNode.node.getCostRadius(),
+																_height/2);
+			addDisplayNodeDir(_centralNode,DisplayDirection.RIGHT);
+
+			return;
+		}
+
+		private function initDisplayNodes(nodeList:NodeList,dir:int,
+																			permissions:int):DisplayNode {
+			trace("BudgetGraph::initDisplayNodes() - Init. DisplayNodes from a NodeList");
+
+			var i:int;
+			var central:DisplayNode;
+			var curr:DisplayNode;
+			var last:DisplayNode;
+
+			// Setup the very first node in the graph
+			central = new DisplayNode(nodeList.getNodeAt(0),permissions);
+			if ( dir == DisplayDirection.UP || dir == DisplayDirection.DOWN ){
+				central.orientedVertical = true;
+			}
+			last = central;
+
+			// Setup the rest in the list
+			for (i=1;i<nodeList.length;i++){
+				curr = new DisplayNode(nodeList.getNodeAt(i),permissions);
+
+				switch(dir){				
+					case DisplayDirection.UP:
+						curr.down = last;
+						last.up = curr;
+						curr.downOpen = true;
+						last.upOpen = true;
+						curr.orientedVertical = true;
+						break;
+					case DisplayDirection.DOWN:
+						curr.up = last;
+						last.down = curr;
+						curr.upOpen = true;
+						last.downOpen = true;
+						curr.orientedVertical = true;
+						break;
+					case DisplayDirection.LEFT:
+						curr.right = last;
+						last.left = curr;
+						curr.rightOpen = true;
+						last.leftOpen = true;
+						break;
+					case DisplayDirection.RIGHT:
+						curr.left = last;
+						last.right = curr;
+						curr.leftOpen = true;
+						last.rightOpen = true;
+						break;
+					default:
+						break;
+				}
+
+				last.print();
+				last = curr;
+			}
+
+			return central;
+		}
+
+		/*
+     * Drawing A List of Nodes
+     *
+     ****************************************************************/
+
+		/*
+     * Given a point that you are currently at determines the next
+     * point to draw from by knowing the direction of draw, current
+     * radius, and next radius to be drawn.
+     */ 
+		private static function getNextDrawPt(curPoint:Point,
+																					radius:Number,
+																					next_radius:Number,
+																					direction:int):Point {
+
+			var nextPoint:Point = new Point(curPoint.x,curPoint.y);
+
+			// Calculate the new point, and the check point
+			switch(direction){
+				case DisplayDirection.DOWN: 
+					nextPoint.y += radius + next_radius; break;
+				case DisplayDirection.UP: 
+					nextPoint.y -= radius + next_radius; break;
+				case DisplayDirection.RIGHT: 
+					nextPoint.x += radius + next_radius; break;
+				default: 
+					trace("BudgetGraph()::getNextDrawPt()-Error:incorrect direction given");
+			}
+			return nextPoint;
+		}
+
+		private static function getStartLoc(pencil:Point,start:int,
+																				radius:Number):Point {
+
+			// Determine start location
+			switch(start){
+				case DisplayStartLoc.TOP: pencil.y += radius; break;
+				case DisplayStartLoc.BOTTOM: pencil.y -= radius; break;
+				case DisplayStartLoc.RIGHT: pencil.x -= radius; break;
+				case DisplayStartLoc.LEFT: pencil.x += radius; break;
+				default: 
+					trace("DisplayNodeList::getStartPos()-Error:incorrect start given");
+			}
+
+			return pencil;
+		}
+
+		private static function drawNode(node:Node,pencil:Point):void{
+			// Draw the node
+			trace("drawing:",node.title," at ",pencil);
+			node.doubleClickEnabled = true;
+			node.x = pencil.x;
+			node.y = pencil.y;
+			node.draw();
+			return;
+		}		
+
+		/*
+		 * Draws a row of Nodes onto the display, 
+		 * without adding them to the display list.
+		 */
+		public static function drawList(pencil:Point,nodes:NodeList,
+																		dir:int,start:int):void {
+			trace("DisplayNodeList::drawList() ",
+				"- Start drawing all ",nodes.length," nodes");			
+
+			var i:int;
+			var node:Node;
+			var next_radius:Number;
+			var radius:Number = nodes.getNodeAt(0).getCostRadius();
+
+			// Pencil is the current position to draw.
+			pencil = getStartLoc(pencil,start,radius);
+
+			// Draw each node
+			for (i=0; i < nodes.length; i++){
+
+				node = nodes.getNodeAt(i);
+				radius = node.getCostRadius();
+				drawNode(node,pencil);
+
+				// If there is another node that can be drawn, than set 
+				// the new drawing position
+				if (i+1 < nodes.length){
+					next_radius = nodes.getNodeAt(i+1).getCostRadius();
+					pencil = getNextDrawPt(pencil,radius,next_radius,dir);
+
+					// If there was no room
+					if (pencil == null){
+						break;
+					}
+				}	
+			}
+			
 			return;
 		}
 

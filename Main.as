@@ -11,7 +11,7 @@ package  {		import flash.display.Sprite;	import flash.display.StageScaleMode;
 	import com.all.BudgetButton;
 	import com.all.YearVis;
 /*	import com.all.BarGraph;	import com.all.LineGraph;	import com.all.NodeGraph;
-*/		public class Main extends Sprite{		// Container for all important nodelists the application should knwo about		
+*/		public class Main extends Sprite{		// Container for all important nodelists the application should knwo about
 		private var _years:Array = new Array();
 		private var _curYear:YearVis = null;
 		private var _budgetBtns:Array = new Array();

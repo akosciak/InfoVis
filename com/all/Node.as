@@ -8,7 +8,7 @@
 
 		// Global Node Properties
 		public static var max_cost:Number = 0;
-		public static var multiplier:Number = 1000;
+		public static var multiplier:Number = 10000;
 
 		// Node Properties
 		public var title:String;
@@ -27,6 +27,7 @@
 		// Some state variables
 		private var _isDrawn:Boolean;		
 		public var isHighlighted:Boolean;
+		public var isFaded:Boolean;
 
 		// Nodes that it is linked to in the budget
 		public var revenue:NodeList = null;
@@ -49,13 +50,14 @@
 			_radius = 0;
 			_alpha = 1.0;
 			_color = 0x000000;
-			_highlightAlpha = 1.0;
-			_highlightColor = 0xFF0000;
+			_highlightAlpha = NodeType.highlightAlphaArray[this.type];
+			_highlightColor = NodeType.highlightColorArray[this.type];
 			_highlightThickness = 5;
 			
 			// More properties
 			_isDrawn = false;
-			isHighlighted = false;
+			isHighlighted = true;
+			isFaded = false;
 
 			// Connections to other nodes
 			revenue = new NodeList();
@@ -102,12 +104,41 @@
 		}
 
 		/*
+     * Returns it to normal alpha value.
+     */		
+		public function unfade():void {
+			if (!_isDrawn){
+				trace("Node::unfade() - node must be drawn before unfading");
+			} else {
+				_alpha = 1.0;
+				isFaded = false;
+				_draw();
+			}
+			return;
+		}
+
+		/*
+     * Clears the node with an alpha value!
+     */		
+		public function fade(alpha:Number = 0.5):void {
+			if (!_isDrawn){
+				trace("Node::clear() - node must be drawn before fading");
+			} else {
+				_alpha = alpha;
+				isFaded = true;
+				_draw();
+			}
+			return;
+		}
+
+		/*
      * Surrounds a currently drawn Node with a highlight!
      */		
-		public function highlight():void {
+		public function highlight(color:Number = 0xFF0000):void {
 			if (!_isDrawn){
 				trace("Node::highlight() - node must be drawn before highlighting");
 			} else {
+				_highlightColor = color;
 				isHighlighted = true;
 				_draw();
 			}
@@ -122,7 +153,8 @@
 			if (isHighlighted){
 				graphics.lineStyle(	_highlightThickness,
 														_highlightColor,
-														_highlightAlpha);		
+														_highlightAlpha,
+														true);		
 			} else {
 				graphics.lineStyle();
 			}
@@ -183,6 +215,7 @@
 			} else {
 				area = (Math.abs(this.cost)/Node.max_cost)*Node.multiplier;
 				_radius = Math.sqrt(area/Math.PI);
+				_highlightThickness = _radius/10;
 			}			
 			return;
 		}
