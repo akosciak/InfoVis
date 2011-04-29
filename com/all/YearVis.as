@@ -26,11 +26,8 @@
 		private var _function_graph:FunctionGraph;
 		private var _box:HoverBox;
 
-		// Placeholders for the real thing
-		private var _bar:PlaceHolder;
-		private var _line:PlaceHolder;
-
-/*		private var _budget_bar:BarGraph;		private var _budget_line:LineGraph;		private var _budget_node:NodeGraph;
+		private var _bar:BarGraph;		private var _line:LineGraph;
+/*		private var _budget_node:NodeGraph;
 */
 
 		public function YearVis(data:BudgetNodeLists,
@@ -113,8 +110,8 @@
 */
 			drawBudgetGraph();
 			drawFunctionGraph();
-			//drawBarGraph();
-			//drawLineGraph();
+			drawBarGraph();
+			drawLineGraph();
 			//drawNodeGraph();
 			return;		}
 

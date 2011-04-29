@@ -1,4 +1,3 @@
-<<<<<<< HEAD:com/all/YearVis.as
 ﻿package com.all {
 	
 	import flash.display.MovieClip;
@@ -27,11 +26,8 @@
 		private var _function_graph:FunctionGraph;
 		private var _box:HoverBox;
 
-		// Placeholders for the real thing
-		private var _bar:PlaceHolder;
-		private var _line:PlaceHolder;
-
-/*		private var _budget_bar:BarGraph;		private var _budget_line:LineGraph;		private var _budget_node:NodeGraph;
+		private var _bar:BarGraph;		private var _line:LineGraph;
+/*		private var _budget_node:NodeGraph;
 */
 
 		public function YearVis(data:BudgetNodeLists,
@@ -69,8 +65,6 @@
 
 			return;
 		}
-
-		// NodeLists getter		public function getNodeLists():BudgetNodeLists {			return _nodelists;		}		// Button getter		public function getButton():BudgetNodeLists {			return _nodelists;		}
 
 		public function turnOffListeners():void {
 			_budget_graph.removeEventListener( MouseEvent.CLICK,
